@@ -12,8 +12,11 @@ mapboxgl.accessToken = MAPBOX_TOKEN;
 const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/satellite-streets-v12',
-    center: [-47.06, -22.90],
-    zoom: 8,
+    // Start with a distant, global view centered on Brazil
+    center: [-53, -14], // roughly central Brazil
+    zoom: 0,            // farthest zoomed-out view supported by Mapbox
+    pitch: 0,
+    bearing: 0,
     projection: 'globe'
 });
 
@@ -37,7 +40,7 @@ const GRAVITY = 9.81;
 const TARGET_DENSITY = 2750;
 // =====================================================================
 
-function calculateImpact(diameter, velocity, angle, meteorDensity = IMPACT_METEOR_DENSITY) {
+function calculateImpact(diameter, velocity, angle, meteorDensity = 3000) {
     const r = diameter / 2;
     const massKg = (4 / 3) * Math.PI * Math.pow(r, 3) * meteorDensity;
     const velocityMps = velocity * 1000;
@@ -55,11 +58,10 @@ function calculateImpact(diameter, velocity, angle, meteorDensity = IMPACT_METEO
 
 let impactRadius = 0;
 let impactEnergy = 0;
+let impactCounter = 0;
 
 function getAxesRatio(angle) { return 0.4 + 0.6 * (angle / 90); }
 function getImpactCenterOffset(angle) { return -Math.cos(angle * Math.PI / 180); }
-const IMPACT_AXES_RATIO = getAxesRatio(IMPACT_ANGLE_DEG);
-const IMPACT_CENTER_OFFSET = getImpactCenterOffset(IMPACT_ANGLE_DEG);
 
 function updateImpactMenu() {
     const radiusElem = document.getElementById('impactRadius');
@@ -92,7 +94,6 @@ function removeAllImpactRings() {
     }
 }
 
-let impactCounter = 0;
 function createEllipticalImpactArea(center, radius, diameter, angle, offset, axesRatio) {
     impactCounter++;
     const steps = 5;
@@ -138,7 +139,14 @@ async function reverseGeocode(coords) {
 
 async function callGenerativeAI(meteor, location) {
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const prompt = `You are a disaster analyst for an impact simulator, tasked with generating an immediate, concise report.\nA meteor with the following characteristics has just struck the planet:\n- Impact Location: ${location}\n- Diameter: ${meteor.diameter.toLocaleString()} meters\n- Mass: ${meteor.mass.toLocaleString()} tons\n- Entry Velocity: ${meteor.velocity.toLocaleString()} km/s\n- Impact Angle: ${meteor.angle} degrees\n\nWrite a single, flowing paragraph summarizing the event. The total length must be under 150 words.\nMaintain a serious, official, yet impactful tone, like an urgent news bulletin.\n\nYour report must seamlessly integrate all of the following points:\n1. Start by explicitly stating the impact location: '${location}'.\n2. Naturally include the meteor's key characteristics (its mass and velocity).\n3. Provide an estimate of the human cost (casualties).\n4. Describe the primary environmental damage, tailored specifically to the location's geography (e.g., urban, forest, ocean).\n5. Outline the main economic disruption, also tailored to the location.\n\nDo not use bolding, lists, or any special formatting.\nRespond ONLY with the text of the report itself, without any introductory phrases.`;
+    const materialMap = {
+        'ferro': 'iron',
+        'gelo': 'ice',
+        'rocha_densa': 'dense rock',
+        'rocha_porosa': 'porous rock'
+    };
+    const materialLabel = materialMap[meteor.material] || meteor.material || 'rock';
+    const prompt = `You are an elite disaster analyst and strategist, combining physics with real-world geographical, demographic, and economic data for the Global Impact Response Directorate. Your task is to generate a priority-one flash report.\n        A meteor with the following characteristics has just struck the planet:\n        - Impact Location: ${location}\n        - Composition: ${materialLabel} (density ${Number(meteor.density).toLocaleString()} kg/m^3)\n        - Diameter: ${meteor.diameter.toLocaleString()} meters\n        - Mass: ${meteor.mass.toLocaleString()} tons\n        - Entry Velocity: ${meteor.velocity.toLocaleString()} km/s\n        - Impact Angle: ${meteor.angle} degrees\n\n        Write a single, flowing paragraph. The total length must be under 180 words.\n        Maintain an extremely serious and data-driven tone. This report is for immediate strategic decision-making.\n\n        Your analysis must follow this strict sequence:\n        1.  State the impact location and characterize the event: Start with "'${location}' has been struck..." and briefly mention the impactor's nature (e.g., a high-velocity, dense iron body).\n        2.  Quantify the immediate human cost: Leveraging your knowledge of '${location}'s population density (e.g., dense metropolis, rural area, shipping lane), provide a specific numerical estimate for immediate fatalities within the primary devastation zone.\n        3.  Detail the localized economic collapse: Identify one or two primary economic pillars '${location}' is known for (e.g., a specific industry like technology or agriculture, a major port, a financial hub, a critical university center). Describe their instantaneous and catastrophic obliteration.\n        4.  Describe the physical transformation of the local geography: Detail the immediate environmental ruin. Mention the scale of the resulting crater and how it has irrevocably altered a specific local feature (e.g., vaporized a river, flattened a downtown district, created a new bay).\n        5.  Conclude with a brief, forward-looking global consequence: In a single, concise phrase, mention the most probable large-scale secondary threat, such as atmospheric ejecta causing short-term cooling, or a specific disruption to global trade originating from the loss of this location.\n\n        Do not use bolding or lists. Respond ONLY with the text of the report itself.`;
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -159,7 +167,8 @@ function getMeteorConfig() {
         diameter: 10000,
         velocity: 20,
         angle: 45,
-        density: 3000
+        density: 3000,
+        material: 'rocha_densa'
     };
     try {
         const saved = JSON.parse(localStorage.getItem('meteorConfig'));
@@ -168,8 +177,10 @@ function getMeteorConfig() {
             const velocity = Number(saved.velocity);
             const angle = Number(saved.angle);
             const density = Number(saved.density);
+            const material = typeof saved.material === 'string' ? saved.material : undefined;
             if ([diameter, velocity, angle, density].every(v => typeof v === 'number' && !isNaN(v) && v > 0)) {
-                return { diameter, velocity, angle, density };
+                const inferredMaterial = material || (density >= 7000 ? 'ferro' : density <= 1000 ? 'gelo' : density >= 3000 ? 'rocha_densa' : 'rocha_porosa');
+                return { diameter, velocity, angle, density, material: inferredMaterial };
             }
         }
     } catch {}
@@ -178,10 +189,9 @@ function getMeteorConfig() {
 
 map.on('click', async (e) => {
     removeAllImpactRings();
-    // Lê a configuração mais recente do meteoro
     const METEOR_CONFIG = getMeteorConfig();
     const currentImpact = calculateImpact(
-        METEOR_CONFIG.diameter, // já em metros
+        METEOR_CONFIG.diameter,
         METEOR_CONFIG.velocity,
         METEOR_CONFIG.angle,
         METEOR_CONFIG.density
@@ -209,7 +219,8 @@ map.on('click', async (e) => {
         mass: currentImpact.massTonnes,
         velocity: METEOR_CONFIG.velocity,
         angle: METEOR_CONFIG.angle,
-        density: METEOR_CONFIG.density
+        density: METEOR_CONFIG.density,
+        material: METEOR_CONFIG.material
     }, locationName);
     aiSummaryDiv.innerHTML = `<span class=\"ai-status-large\">${narrative}</span> <span class=\"ai-watermark-large\">AI generated</span>`;
 });
