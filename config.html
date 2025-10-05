@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <!-- Impede zoom/pinch em mobile (desktop zoom não pode ser bloqueado) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Meteor Parameters</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="config-layout">
+        <aside class="config-sidebar">
+            <h1>Meteor Parameters</h1>
+            <form id="meteorForm" class="config-form">
+                <div class="field range-field">
+                    <div class="field-head">
+                        <label for="sizeRange">Diameter (km)</label>
+                        <span id="sizeValue" class="range-value">10.00</span>
+                    </div>
+                    <input type="range" id="sizeRange" min="0.1" max="100" step="0.01" value="10">
+                </div>
+                <div class="field range-field">
+                    <div class="field-head">
+                        <label for="speedRange">Velocity (km/s)</label>
+                        <span id="speedValue" class="range-value">17</span>
+                    </div>
+                    <input type="range" id="speedRange" min="5" max="72" step="1" value="17">
+                </div>
+                <div class="field">
+                    <label for="material">Material</label>
+                    <select id="material">
+                        <option value="ferro">Iron</option>
+                        <option value="gelo">Ice</option>
+                        <option value="rocha_densa">Porous Rock</option>
+                        <option value="rocha_porosa">Dense Rock</option>
+                    </select>
+                </div>
+                <div class="field range-field">
+                    <div class="field-head">
+                        <label for="angleRange">Angle (°)</label>
+                        <span id="angleValue" class="range-value">45</span>
+                    </div>
+                    <input type="range" id="angleRange" min="1" max="90" value="45">
+                </div>
+                <div class="buttons">
+                    <button type="button" id="simulateBtn">Done</button>
+                    <button type="button" id="backBtn" class="secondary">Back</button>
+                </div>
+            </form>
+        </aside>
+        <section class="config-preview">
+            <div class="preview-inner"> 
+                <div class="preview-object">
+                    <img src="images/meteor-default.gif" alt="Meteoro" class="meteor-img">
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- NOVO: scale bar vertical -->
+    <div class="scale-bar-vertical">
+        <img src="images/scalebar.png" alt="Scale bar vertical">
+    </div>
+    
+
+    <script src="scripts/Config.js"></script>
+</body>
+</html>

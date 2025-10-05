@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meteor Impact Simulator</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js"></script>
+    <script src="https://npmcdn.com/@turf/turf/turf.min.js"></script> </head>
+<body>
+    <div id="map"></div>
+    <div class="ui-overlay">
+        <button id="editMeteorBtn" type="button">
+            <img src="images/editMeteorButtonIcon.png" alt="Meteor Icon" class="meteor-icon"/>
+            Edit meteor
+        </button>
+    </div>
+    <div class="hand-hint">
+        <img src="images/clickButton.png" alt="Click Icon" />
+        Click in the map to simulate meteor impact
+    </div>
+    <div class="sandwich-menu">
+        <button class="sandwich-btn" id="sandwichMenuBtn" type="button" aria-label="Open impact information menu">
+            <img src="https://cdn-icons-png.flaticon.com/512/1828/1828859.png" alt="Menu" class="sandwich-icon" />
+            <span class="sandwich-btn-label">Impact information</span>
+        </button>
+        <div class="menu-content" id="impactMenu">
+            <div class="menu-title">Impact information</div>
+            <div class="menu-field"><span class="menu-label">Impact radius</span><span class="menu-value" id="impactRadius"></span></div>
+            <div class="menu-field"><span class="menu-label">Energy</span><span class="menu-value" id="impactEnergy"></span></div>
+            <div class="menu-summary" id="aiSummary">
+                The AI report will be generated after the impact.
+                <span class="ai-watermark">AI generated</span>
+            </div>
+        </div>
+    </div>
+    <script src="scripts/keys.js"></script>
+    <script src="scripts/Main.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# .gitignore
+
+# Ignorar o arquivo de variáveis de ambiente
+.env
+
+# Ignorar o arquivo de configuração da API
+scripts/keys.js
